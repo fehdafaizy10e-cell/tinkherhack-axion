@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Women Safety System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Safety Check</h1>
+
+        <input type="number" id="interval" placeholder="Interval (minutes)">
+        <button onclick="startMonitoring()">Enable Safety</button>
+
+        <div id="alertBox" class="hidden">
+            <p>Are you safe?</p>
+
+            <button class="ok" onclick="confirmOK()">OK</button>
+            <button class="reset" onclick="resetTimer()">Reset Timer</button>
+            <button class="call" onclick="makeEmergencyCall()">Call Now</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
