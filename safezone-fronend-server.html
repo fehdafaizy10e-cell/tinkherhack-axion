@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0" />
+  <title>SafeZone — Women Safety System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet" />
+  <!-- Socket.IO client — loaded from CDN (matches server version 4.x) -->
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+
+  <style>
+    /* ════════════════════════════════════════════════
+   ROOT VARIABLES & RESET
+════════════════════════════════════════════════ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #08080E;
+      --s1: #0F0F1A;
+      --s2: #171728;
+      --s3: #22223A;
+      --rose: #FF2D55;
+      --rose2: #FF6580;
+      --rose-dim: rgba(255, 45, 85, .13);
+      --green: #00E5A0;
+      --green-dim: rgba(0, 229, 160, .13);
+      --amber: #FFB340;
+      --amber-dim: rgba(255, 179, 64, .13);
+      --blue: #3CC8FF;
+      --blue-dim: rgba(60, 200, 255, .13);
+      --purple: #C77DFF;
+      --border: rgba(255, 255, 255, .07);
+      --text: #EEEDF8;
+      --muted: #6B6A85;
+      --font: 'Outfit', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --r: 16px;
+      --r2: 24px;
+      --shadow-rose: 0 0 40px rgba(255, 45, 85, .18);
+      --shadow-green: 0 0 40px rgba(0, 229, 160, .18);
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+    }
+
+    /* ════════════════════════════════════════════════
+   LAYOUT
+════════════════════════════════════════════════ */
+    #app {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      box-shadow: 0 0 80px rgba(255, 45, 85, .06);
+      position: relative;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 18px 20px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8, 8, 14, .9);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      font-size: 26px;
+      filter: drop-shadow(0 0 10px rgba(255, 45, 85, .7));
+    }
+
+    .brand-name {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.5px;
+    }
+
+    .brand-name span {
+      color: var(--rose);
+    }
+
+    #sys-badge {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .8px;
+      padding: 5px 13px;
+      border-radius: 50px;
+      transition: all .4s;
+    }
+
+    #sys-badge.on {
+      background: var(--green-dim);
+      color: var(--green);
+      border: 1px solid rgba(0, 229, 160, .25);
+      box-shadow: 0 0 12px rgba(0, 229, 160, .15);
+    }
+
+    #sys-badge.off {
+      background: var(--s2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Scrollable body ── */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 18px 90px;
+    }
+
+    main::-webkit-scrollbar {
+      width: 0;
+    }
+
+    /* ── Bottom Nav ── */
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      background: rgba(10, 10, 18, .97);
+      backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding: 10px 8px 22px;
+      z-index: 50;
+    }
+
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      border-radius: 12px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      letter-spacing: .3px;
+    }
+
+    .nav-btn .ni {
+      font-size: 20px;
+      transition: transform .2s;
+    }
+
+    .nav-btn.active {
+      color: var(--rose);
+      background: var(--rose-dim);
+    }
+
+    .nav-btn.active .ni {
+      transform: scale(1.15);
+    }
+
+    /* ════════════════════════════════════════════════
+   COMMON COMPONENTS
+════════════════════════════════════════════════ */
+    .section-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 20px;
+      margin-bottom: 14px;
+      transition: border-color .2s;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 45, 85, .18);
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Toggle pill */
+    .pill {
+      width: 54px;
+      height: 28px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: background .3s;
+    }
+
+    .pill.on {
+      background: var(--green);
+      box-shadow: 0 0 16px rgba(0, 229, 160, .4);
+    }
+
+    .pill.off {
+      background: var(--s3);
+    }
+
+    .pill-knob {
+      position: absolute;
+      top: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
+      transition: left .3s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    .pill.on .pill-knob {
+      left: 29px;
+    }
+
+    .pill.off .pill-knob {
+      left: 3px;
+    }
+
+    /* Slider */
+    .range-wrap {
+      margin-bottom: 16px;
+    }
+
+    .range-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .range-lbl {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .range-val {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--rose);
+    }
+
+    .range-unit {
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: 3px;
+    }
+
+    input[type=range] {
+      width: 100%;
+      height: 5px;
+      border-radius: 3px;
+      appearance: none;
+      background: linear-gradient(to right, var(--rose) var(--pct, 0%), var(--s3) var(--pct, 0%));
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--rose);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 10px rgba(255, 45, 85, .5);
+    }
+
+    .ticks {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+    }
+
+    .ticks span {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* Grace buttons */
+    .grace-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .grace-opt {
+      padding: 9px 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--s2);
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+    }
+
+    .grace-opt.active {
+      background: var(--rose-dim);
+      border-color: rgba(255, 45, 85, .35);
+      color: var(--rose);
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 13px;
+      border: none;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .25s;
+      letter-spacing: .4px;
+    }
+
+    .btn-rose {
+      background: linear-gradient(135deg, var(--rose), #C01235);
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(255, 45, 85, .4);
+    }
+
+    .btn-rose:hover {
+      box-shadow: 0 6px 32px rgba(255, 45, 85, .55);
+      transform: translateY(-1px);
+    }
+
+    .btn-stop {
+      background: var(--s3);
+      color: var(--muted);
+    }
+
+    .btn-demo {
+      background: var(--blue-dim);
+      color: var(--blue);
+      border: 1px dashed rgba(60, 200, 255, .3);
+      font-size: 13px;
+      padding: 11px;
+      margin-bottom: 14px;
+    }
+
+    .btn-demo:hover {
+      background: rgba(60, 200, 255, .18);
+    }
+
+    /* ════════════════════════════════════════════════
+   FLOW TIMELINE
+════════════════════════════════════════════════ */
+    .timeline {
+      padding-left: 28px;
+      position: relative;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 9px;
+      top: 14px;
+      bottom: 14px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--rose-dim), transparent);
+    }
+
+    .tl-step {
+      position: relative;
+      margin-bottom: 22px;
+    }
+
+    .tl-step:last-child {
+      margin-bottom: 0;
+    }
+
+    .tl-dot {
+      position: absolute;
+      left: -28px;
+      top: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      border: 2px solid var(--s1);
+      transition: all .4s;
+    }
+
+    .dot-idle {
+      background: var(--s3);
+      color: var(--muted);
+    }
+
+    .dot-active {
+      background: var(--rose);
+      color: #fff;
+      animation: glow-rose 1.5s infinite;
+    }
+
+    .dot-done {
+      background: var(--green);
+      color: var(--bg);
+    }
+
+    .dot-warn {
+      background: var(--amber);
+      color: var(--bg);
+      animation: glow-amber 1s infinite;
+    }
+
+    .dot-danger {
+      background: var(--rose);
+      color: #fff;
+      animation: glow-rose .7s infinite;
+    }
+
+    @keyframes glow-rose {
+
+      0%,
+      100% {
+        box-shadow: 0 0 8px var(--rose);
+      }
+
+      50% {
+        box-shadow: 0 0 20px var(--rose);
+      }
+    }
+
+    @keyframes glow-amber {
+
+      0%,
+      100% {
+        box-shadow: 0 0 8px var(--amber);
+      }
+
+      50% {
+        box-shadow: 0 0 20px var(--amber);
+      }
+    }
+
+    .tl-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .tl-desc {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .tl-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+      letter-spacing: .3px;
+    }
+
+    .tb-wait {
+      background: var(--amber-dim);
+      color: var(--amber);
+    }
+
+    .tb-ok {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .tb-miss {
+      background: var(--rose-dim);
+      color: var(--rose2);
+    }
+
+    .tb-rescue {
+      background: var(--rose-dim);
+      color: var(--rose);
+      animation: blink .6s infinite;
+    }
+
+    @keyframes blink {
+      50% {
+        opacity: .35;
+      }
+    }
+
+    /* ════════════════════════════════════════════════
+   STATS
+════════════════════════════════════════════════ */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat-card {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .stat-lbl {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 5px;
+      letter-spacing: .3px;
+    }
+
+    /* ════════════════════════════════════════════════
+   ACTIVITY LOG
+════════════════════════════════════════════════ */
+    .log-card {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .log-head {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .log-live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: glow-rose 2s infinite;
+    }
+
+    #log-list {
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    #log-list::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    #log-list::-webkit-scrollbar-thumb {
+      background: var(--s3);
+      border-radius: 2px;
+    }
+
+    .log-entry {
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      animation: slide-in .3s ease;
+    }
+
+    @keyframes slide-in {
+      from {
+        opacity: 0;
+        transform: translateX(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .log-tag {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      letter-spacing: .3px;
+      white-space: nowrap;
+    }
+
+    /* Tag colour map */
+    .tag-ENABLED,
+    .tag-RESPONDED,
+    .tag-IVR_OK,
+    .tag-SAFE,
+    .tag-RESOLVED,
+    .tag-DEMO {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .tag-CHECKIN,
+    .tag-SCHEDULE,
+    .tag-EVALUATE {
+      background: var(--blue-dim);
+      color: var(--blue);
+    }
+
+    .tag-GRACE_EXPIRED,
+    .tag-IVR_MISSED,
+    .tag-IVR_GAP {
+      background: var(--amber-dim);
+      color: var(--amber);
+    }
+
+    .tag-IVR_CALL {
+      background: var(--s3);
+      color: var(--muted);
+    }
+
+    .tag-RESCUE,
+    .tag-SMS_SENT {
+      background: var(--rose-dim);
+      color: var(--rose2);
+    }
+
+    .tag-DISABLED,
+    .tag-RESUME {
+      background: var(--s3);
+      color: var(--muted);
+    }
+
+    .log-msg {
+      font-size: 12px;
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .log-time {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    /* ════════════════════════════════════════════════
+   CONTACTS TAB
+════════════════════════════════════════════════ */
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      transition: border-color .2s;
+    }
+
+    .contact-item:hover {
+      border-color: rgba(255, 45, 85, .2);
+    }
+
+    .c-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--s3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .c-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .c-phone {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .c-badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .cb-fam {
+      background: var(--rose-dim);
+      color: var(--rose2);
+    }
+
+    .cb-fri {
+      background: var(--blue-dim);
+      color: var(--blue);
+    }
+
+    .cb-em {
+      background: var(--amber-dim);
+      color: var(--amber);
+    }
+
+    /* ════════════════════════════════════════════════
+   MAP SECTION
+════════════════════════════════════════════════ */
+    .map-box {
+      background: #0E1525;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .map-visual {
+      height: 200px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(60, 200, 255, .05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(60, 200, 255, .05) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .map-road {
+      position: absolute;
+      background: rgba(60, 200, 255, .1);
+    }
+
+    .map-road.h {
+      height: 2px;
+      left: 0;
+      right: 0;
+    }
+
+    .map-road.v {
+      width: 2px;
+      top: 0;
+      bottom: 0;
+    }
+
+    .map-you {
+      position: absolute;
+      top: 44%;
+      left: 48%;
+      transform: translate(-50%, -50%);
+    }
+
+    .you-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--rose);
+      border: 3px solid #fff;
+      box-shadow: 0 0 20px rgba(255, 45, 85, .7);
+      animation: ping 2s ease-in-out infinite;
+    }
+
+    .you-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 45, 85, .4);
+      transform: translate(-50%, -50%);
+      animation: ring-expand 2s ease-out infinite;
+    }
+
+    @keyframes ping {
+
+      0%,
+      100% {
+        box-shadow: 0 0 20px rgba(255, 45, 85, .7);
+      }
+
+      50% {
+        box-shadow: 0 0 40px rgba(255, 45, 85, .9);
+      }
+    }
+
+    @keyframes ring-expand {
+      0% {
+        transform: translate(-50%, -50%) scale(.4);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(2.5);
+        opacity: 0;
+      }
+    }
+
+    .map-place {
+      position: absolute;
+      font-size: 20px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .6));
+    }
+
+    .map-overlay {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      background: rgba(8, 8, 14, .85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .map-addr {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .map-coords {
+      font-size: 10px;
+      color: var(--blue);
+      font-family: var(--mono);
+    }
+
+    .map-actions {
+      display: flex;
+      gap: 8px;
+      padding: 14px;
+    }
+
+    .map-act {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--s2);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .map-act:hover {
+      background: var(--blue-dim);
+      border-color: rgba(60, 200, 255, .3);
+      color: var(--blue);
+    }
+
+    .map-act.active {
+      background: var(--blue-dim);
+      border-color: rgba(60, 200, 255, .4);
+      color: var(--blue);
+    }
+
+    /* ════════════════════════════════════════════════
+   MODALS
+════════════════════════════════════════════════ */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 8, 14, .92);
+      backdrop-filter: blur(14px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    /* ── Check-in notification modal ── */
+    .notif-modal {
+      background: var(--s1);
+      border: 1px solid rgba(255, 45, 85, .25);
+      border-radius: 28px;
+      padding: 36px 28px;
+      max-width: 370px;
+      width: 100%;
+      text-align: center;
+      animation: pop-in .4s cubic-bezier(.34, 1.56, .64, 1);
+      box-shadow: var(--shadow-rose), 0 24px 60px rgba(0, 0, 0, .6);
+    }
+
+    @keyframes pop-in {
+      from {
+        transform: scale(.85);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .nm-icon {
+      font-size: 56px;
+      margin-bottom: 14px;
+      animation: shake 1.2s infinite;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: rotate(-8deg);
+      }
+
+      50% {
+        transform: rotate(8deg);
+      }
+    }
+
+    .nm-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .nm-sub {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 24px;
+      line-height: 1.55;
+    }
+
+    /* Countdown ring */
+    .countdown-wrap {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 24px;
+    }
+
+    .countdown-svg {
+      transform: rotate(-90deg);
+    }
+
+    #cd-ring {
+      fill: none;
+      stroke: var(--s3);
+      stroke-width: 6;
+    }
+
+    #cd-progress {
+      fill: none;
+      stroke: var(--amber);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 283;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 1s linear, stroke .5s;
+    }
+
+    .countdown-num {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--amber);
+      line-height: 1;
+    }
+
+    .countdown-num.danger {
+      color: var(--rose);
+      animation: blink .5s infinite;
+    }
+
+    .countdown-unit {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      font-family: var(--font);
+    }
+
+    .nm-ok {
+      width: 100%;
+      padding: 20px;
+      border-radius: 18px;
+      border: none;
+      background: linear-gradient(135deg, var(--green), #00A572);
+      color: var(--bg);
+      font-family: var(--font);
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all .2s;
+      box-shadow: 0 6px 24px rgba(0, 229, 160, .4);
+      letter-spacing: .5px;
+    }
+
+    .nm-ok:hover {
+      box-shadow: 0 8px 32px rgba(0, 229, 160, .55);
+      transform: translateY(-2px);
+    }
+
+    .nm-ok:active {
+      transform: scale(.98);
+    }
+
+    /* ── IVR call modal ── */
+    .ivr-modal {
+      background: var(--s1);
+      border: 1px solid rgba(60, 200, 255, .25);
+      border-radius: 28px;
+      padding: 32px 28px;
+      max-width: 370px;
+      width: 100%;
+      text-align: center;
+      animation: pop-in .4s cubic-bezier(.34, 1.56, .64, 1);
+      box-shadow: 0 0 60px rgba(60, 200, 255, .12), 0 24px 60px rgba(0, 0, 0, .6);
+    }
+
+    .ivr-phone-ring {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--blue-dim);
+      border: 3px solid rgba(60, 200, 255, .3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      margin: 0 auto 20px;
+      animation: ivr-ring 1s ease-in-out infinite;
+    }
+
+    @keyframes ivr-ring {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(60, 200, 255, .4);
+      }
+
+      50% {
+        box-shadow: 0 0 0 24px rgba(60, 200, 255, 0);
+      }
+    }
+
+    .ivr-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .ivr-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .ivr-phone-num {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--blue);
+      margin-bottom: 20px;
+    }
+
+    /* IVR dots tracker */
+    .ivr-dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .ivr-dot {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      border: 2px solid transparent;
+      transition: all .4s;
+    }
+
+    .ivr-dot.idle {
+      background: var(--s3);
+      color: var(--muted);
+      border-color: var(--border);
+    }
+
+    .ivr-dot.ringing {
+      background: var(--blue-dim);
+      color: var(--blue);
+      border-color: rgba(60, 200, 255, .4);
+      animation: glow-rose .8s infinite;
+    }
+
+    .ivr-dot.missed {
+      background: var(--rose-dim);
+      color: var(--rose);
+      border-color: rgba(255, 45, 85, .3);
+    }
+
+    .ivr-dot.answered {
+      background: var(--green-dim);
+      color: var(--green);
+      border-color: rgba(0, 229, 160, .3);
+    }
+
+    .ivr-answer {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: var(--blue);
+      color: var(--bg);
+      font-family: var(--font);
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all .2s;
+      margin-bottom: 10px;
+    }
+
+    .ivr-answer:hover {
+      filter: brightness(1.12);
+    }
+
+    .ivr-ring-timer {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Gap notice */
+    .gap-notice {
+      text-align: center;
+      animation: pop-in .3s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    .gap-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .gap-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .gap-sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── Rescue modal ── */
+    .rescue-modal {
+      background: var(--s1);
+      border: 1px solid rgba(255, 45, 85, .4);
+      border-radius: 28px;
+      padding: 32px 28px;
+      max-width: 370px;
+      width: 100%;
+      text-align: center;
+      animation: pop-in .4s cubic-bezier(.34, 1.56, .64, 1);
+      box-shadow: var(--shadow-rose), 0 0 100px rgba(255, 45, 85, .15), 0 24px 60px rgba(0, 0, 0, .7);
+    }
+
+    .rescue-beacon {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      background: radial-gradient(circle, rgba(255, 45, 85, .25), rgba(255, 45, 85, .05));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 44px;
+      border: 2px solid rgba(255, 45, 85, .4);
+      animation: beacon-pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes beacon-pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 45, 85, .4);
+      }
+
+      50% {
+        box-shadow: 0 0 0 32px rgba(255, 45, 85, 0);
+      }
+    }
+
+    .rescue-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--rose2);
+      margin-bottom: 6px;
+    }
+
+    .rescue-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    .rescue-unit {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 18px;
+      text-align: left;
+    }
+
+    .ru-name {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .ru-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .ru-val {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .rescue-resolve {
+      width: 100%;
+      padding: 14px;
+      border-radius: 13px;
+      border: 1px solid rgba(0, 229, 160, .2);
+      background: var(--green-dim);
+      color: var(--green);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .rescue-resolve:hover {
+      background: rgba(0, 229, 160, .2);
+    }
+
+    /* ════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════ */
+    #toast-container {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 390px;
+      max-width: 92vw;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 13px 18px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: toast-in .35s cubic-bezier(.34, 1.56, .64, 1);
+      backdrop-filter: blur(20px);
+      pointer-events: auto;
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateY(-16px) scale(.92);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .toast.success {
+      background: var(--green-dim);
+      border: 1px solid rgba(0, 229, 160, .3);
+      color: var(--green);
+    }
+
+    .toast.error {
+      background: var(--rose-dim);
+      border: 1px solid rgba(255, 45, 85, .3);
+      color: var(--rose2);
+    }
+
+    .toast.info {
+      background: var(--blue-dim);
+      border: 1px solid rgba(60, 200, 255, .3);
+      color: var(--blue);
+    }
+
+    .toast.warn {
+      background: var(--amber-dim);
+      border: 1px solid rgba(255, 179, 64, .3);
+      color: var(--amber);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ════════════════════════════════════════════════════════
+     TOAST container
+════════════════════════════════════════════════════════ -->
+  <div id="toast-container"></div>
+
+  <!-- ════════════════════════════════════════════════════════
+     CHECK-IN NOTIFICATION MODAL
+════════════════════════════════════════════════════════ -->
+  <div id="notif-overlay" class="overlay">
+    <div class="notif-modal">
+      <div class="nm-icon">🔔</div>
+      <div class="nm-title">Safety Check-in</div>
+      <div class="nm-sub">Are you safe? Tap <strong>I'M SAFE</strong> before the timer runs out.<br />Missing this will
+        trigger automated IVR calls.</div>
+      <div class="countdown-wrap">
+        <svg class="countdown-svg" width="120" height="120" viewBox="0 0 100 100">
+          <circle id="cd-ring" cx="50" cy="50" r="45" />
+          <circle id="cd-progress" cx="50" cy="50" r="45" />
+        </svg>
+        <div class="countdown-num" id="cd-num">
+          <span id="cd-sec">60</span>
+          <span class="countdown-unit">seconds</span>
+        </div>
+      </div>
+      <button class="nm-ok" id="btn-safe">✓ &nbsp;I'M SAFE</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+     IVR CALL MODAL
+════════════════════════════════════════════════════════ -->
+  <div id="ivr-overlay" class="overlay">
+    <div class="ivr-modal">
+      <div class="ivr-phone-ring">📞</div>
+      <div class="ivr-title">Emergency Call <span id="ivr-call-num">#1</span></div>
+      <div class="ivr-sub">Automated safety call from SafeZone</div>
+      <div class="ivr-phone-num" id="ivr-phone-display"></div>
+      <div class="ivr-dots">
+        <div class="ivr-dot idle" id="dot-1" title="Call 1">1</div>
+        <div class="ivr-dot idle" id="dot-2" title="Call 2">2</div>
+        <div class="ivr-dot idle" id="dot-3" title="Call 3">3</div>
+      </div>
+      <button class="ivr-answer" id="btn-answer">📞 &nbsp;Answer — I'm Safe</button>
+      <div class="ivr-ring-timer">Auto-ends in <span id="ivr-ring-sec">15</span>s if unanswered</div>
+    </div>
+  </div>
+
+  <!-- Gap between IVR calls -->
+  <div id="gap-overlay" class="overlay">
+    <div class="ivr-modal gap-notice">
+      <div class="gap-icon">⏳</div>
+      <div class="gap-title">Calling Again in <span id="gap-sec">10</span>s…</div>
+      <div class="gap-sub">No response on last call.<br />Call <span id="gap-next-call">2</span> will be placed shortly.
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+     RESCUE DISPATCHED MODAL
+════════════════════════════════════════════════════════ -->
+  <div id="rescue-overlay" class="overlay">
+    <div class="rescue-modal">
+      <div class="rescue-beacon">🚨</div>
+      <div class="rescue-title">RESCUE TEAM DISPATCHED</div>
+      <div class="rescue-sub">2 or more calls were unanswered.<br />Emergency services are en route to your
+        location.<br />All contacts have been alerted.</div>
+      <div class="rescue-unit">
+        <div class="ru-name">🚔 Women Safety Squad — Alpha Unit</div>
+        <div class="ru-row"><span>ETA</span> <span class="ru-val" style="color:var(--amber)">4 minutes</span></div>
+        <div class="ru-row"><span>Distance</span> <span class="ru-val">1.1 km</span></div>
+        <div class="ru-row"><span>Badge No.</span> <span class="ru-val"
+            style="font-family:var(--mono)">WSS-A-2024</span></div>
+        <div class="ru-row"><span>Location sent</span><span class="ru-val" id="rescue-loc-display">—</span></div>
+      </div>
+      <button class="rescue-resolve" id="btn-resolve">✓ I'm Safe — Close Incident</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+     MAIN APP
+════════════════════════════════════════════════════════ -->
+  <div id="app">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">🛡</div>
+        <div class="brand-name">Safe<span>Zone</span></div>
+      </div>
+      <div id="sys-badge" class="off">○ OFFLINE</div>
+    </header>
+
+    <main id="main-content">
+      <!-- Tabs injected by JS -->
+    </main>
+
+    <nav>
+      <button class="nav-btn active" data-tab="monitor" onclick="switchTab('monitor')">
+        <span class="ni">🏠</span>Monitor
+      </button>
+      <button class="nav-btn" data-tab="map" onclick="switchTab('map')">
+        <span class="ni">📍</span>Map
+      </button>
+      <button class="nav-btn" data-tab="contacts" onclick="switchTab('contacts')">
+        <span class="ni">📞</span>Contacts
+      </button>
+      <button class="nav-btn" data-tab="log" onclick="switchTab('log')">
+        <span class="ni">📋</span>Log
+      </button>
+    </nav>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════ -->
+  <script>
+    /* ── Config ───────────────────────────────────────────────────────────────── */
+    // UPDATED: Replace with your actual production backend URL
+    const BACKEND = ""; // same-origin — served by the same Express server
+
+    const USER_ID = "user-001";
+    const USER = {
+      name: "Meera Krishnan",
+      phone: "+91 98765 43210",
+      emergencyContacts: [
+        { name: "Mom", phone: "+91 98700 11111", relation: "Family", emoji: "👩" },
+        { name: "Priya", phone: "+91 87600 22222", relation: "Friend", emoji: "👩‍🦱" },
+        { name: "Local Police", phone: "100", relation: "Emergency", emoji: "🚔" },
+        { name: "Women Helpline", phone: "1091", relation: "Helpline", emoji: "🛡" },
+      ],
+      location: { lat: 9.9312, lng: 76.2673, address: "Marine Drive, Ernakulam, Kerala" },
+    };
+
+    /* ── App State ────────────────────────────────────────────────────────────── */
+    let state = {
+      tab: "monitor",
+      enabled: false,
+      intervalMin: 30,
+      graceSec: 60,
+      currentCheckin: null,
+      currentIVR: null,
+      tracking: false,
+      dots: [0, 0, 0],
+      stats: { totalCheckins: 0, missedCheckins: 0, rescueDispatches: 0 },
+      log: [],
+    };
+
+    let socket = null;
+    let cdTimer = null;
+    let ivrRingTimer = null;
+    let gapTimer = null;
+    let checkinId = null;
+    let ivrCallNum = 0;
+
+    /* ── Utility ──────────────────────────────────────────────────────────────── */
+    const $ = id => document.getElementById(id);
+    const qs = sel => document.querySelector(sel);
+
+    function toast(msg, type = "info") {
+      const el = document.createElement("div");
+      el.className = `toast ${type}`;
+      el.innerHTML = `<span>${msg}</span>`;
+      $("toast-container").prepend(el);
+      setTimeout(() => el.remove(), 3800);
+    }
+
+    function fmt(ts) {
+      return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    }
+
+    /**
+     * UPDATED API Function: Uses absolute BACKEND URL
+     */
+    function api(path, data) {
+      const url = BACKEND ? BACKEND.replace(/\/$/, "") + "/" + path.replace(/^\//, "") : path;
+      return fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: USER_ID, ...data }),
+      }).then(r => {
+        if (!r.ok) throw new Error("Server Error");
+        return r.json();
+      });
+    }
+
+    /* ── SIMULATED BACKEND (Fallback) ─────────────────────────────────────────── */
+    let simTimers = {};
+    function simClear(...keys) {
+      (keys.length ? keys : Object.keys(simTimers)).forEach(k => {
+        clearTimeout(simTimers[k]); clearInterval(simTimers[k]); delete simTimers[k];
+      });
+    }
+
+    function simEmit(event, data) {
+      handleServerEvent(event, { ...data, ts: new Date().toISOString() });
+    }
+
+    function simLog(type, message) {
+      simEmit("log_entry", { id: Math.random().toString(36).slice(2), type, message, ts: new Date().toISOString() });
+    }
+
+    function simSchedule() {
+      simLog("SCHEDULE", `Next check-in in ${state.intervalMin} min`);
+      simTimers.next = setTimeout(simTriggerCheckin, state.intervalMin * 60 * 1000);
+    }
+
+    function simTriggerCheckin() {
+      checkinId = "CHK-" + Date.now();
+      state.stats.totalCheckins++;
+      simLog("CHECKIN", `Notification sent — ${state.graceSec}s to respond`);
+      simEmit("checkin_ping", { checkinId, graceSeconds: state.graceSec });
+      simTimers.grace = setTimeout(() => {
+        if (state.currentCheckin) {
+          state.stats.missedCheckins++;
+          simLog("GRACE_EXPIRED", "Grace elapsed → IVR sequence starting");
+          simEmit("grace_expired", { checkinId });
+          simIVR(1);
+        }
+      }, state.graceSec * 1000);
+    }
+
+    function simIVR(n) {
+      if (!state.currentCheckin) return;
+      simLog("IVR_CALL", `📞 IVR Call #${n} → ${USER.phone}`);
+      simEmit("ivr_call", { callNumber: n, phone: USER.phone, ringSeconds: 15 });
+      simTimers[`ivr${n}`] = setTimeout(() => {
+        if (!state.currentCheckin) return;
+        simEmit("ivr_missed", { callNumber: n, missedCalls: n });
+        if (n < 3) {
+          simEmit("ivr_gap", { nextCall: n + 1, gapSeconds: 10 });
+          simTimers[`gap${n}`] = setTimeout(() => simIVR(n + 1), 10000);
+        } else {
+          simEmit("evaluate", { missed: 3, threshold: 2 });
+          simDispatch();
+        }
+      }, 15000);
+    }
+
+    function simDispatch() {
+      state.stats.rescueDispatches++;
+      simLog("RESCUE", `🚨 DISPATCHED → ${USER.location.address}`);
+      simEmit("rescue_dispatched", { location: USER.location });
+    }
+
+    /* ── Socket & Events ────────────────────────────────────────────────────────── */
+    function connectSocket() {
+      try {
+        socket = io(BACKEND || undefined, { timeout: 3000, reconnectionAttempts: 2 });
+        socket.on("connect", () => {
+          socket.emit("register_socket", USER_ID);
+          socket.onAny((event, data) => handleServerEvent(event, data));
+          // Auto-register user session so REST API calls work
+          api("/api/register", {
+            name: USER.name,
+            phone: USER.phone,
+            emergencyContacts: USER.emergencyContacts,
+            location: USER.location,
+          }).catch(() => { });
+        });
+        socket.on("connect_error", () => socket = null);
+      } catch (e) { socket = null; }
+    }
+
+    function handleServerEvent(event, data) {
+      switch (event) {
+        case "log_entry":
+          state.log.unshift(data);
+          if (state.tab === "log") renderLog();
+          break;
+        case "monitor_enabled":
+          state.enabled = true; updateBadge(); updateFlowState("waiting");
+          toast(`✅ Monitor ON`, "success"); renderTab(); break;
+        case "monitor_disabled":
+          state.enabled = false; updateBadge(); updateFlowState("idle"); renderTab(); break;
+        case "checkin_ping":
+          state.currentCheckin = data; checkinId = data.checkinId;
+          openCheckinModal(data.graceSeconds); updateFlowState("ping"); break;
+        case "grace_expired":
+          closeCheckinModal(); updateFlowState("ivr_starting"); break;
+        case "checkin_ok":
+          state.currentCheckin = null; closeCheckinModal(); updateFlowState("waiting");
+          toast("✅ Safe!", "success"); break;
+        case "ivr_call":
+          ivrCallNum = data.callNumber; state.dots[data.callNumber - 1] = 1;
+          openIVRModal(data.callNumber, data.phone); updateFlowState("ivr"); break;
+        case "ivr_missed":
+          state.dots[data.callNumber - 1] = 2; closeIVRModal(); updateDots(); break;
+        case "ivr_gap":
+          openGapModal(data.nextCall, data.gapSeconds); break;
+        case "ivr_answered":
+          state.currentCheckin = null; state.dots = [0, 0, 0]; closeIVRModal();
+          updateFlowState("waiting"); toast(`✅ Confirmed Safe`, "success"); break;
+        case "rescue_dispatched":
+          state.currentCheckin = null; closeIVRModal(); showOverlay("rescue-overlay");
+          updateFlowState("rescue"); break;
+        case "incident_resolved":
+          closeOverlay("rescue-overlay"); updateFlowState("waiting"); break;
+      }
+    }
+
+    /* ── Actions ──────────────────────────────────────────────────────────────── */
+    async function toggleMonitor() {
+      if (!state.enabled) {
+        state.enabled = true;
+        if (socket?.connected) await api("/api/checkin/enable", { intervalMinutes: state.intervalMin, graceSeconds: state.graceSec });
+        else { simClear(); handleServerEvent("monitor_enabled", {}); simSchedule(); }
+      } else {
+        state.enabled = false;
+        if (socket?.connected) await api("/api/checkin/disable");
+        else { simClear(); handleServerEvent("monitor_disabled", {}); }
+      }
+    }
+
+    function runDemo() {
+      state.intervalMin = 0.1; state.graceSec = 10; state.enabled = true;
+      simClear(); handleServerEvent("monitor_enabled", {});
+      simTimers.next = setTimeout(simTriggerCheckin, 2000);
+      toast("⚡ Demo starting in 2s", "info");
+    }
+
+    async function respondSafe() {
+      closeCheckinModal(); state.currentCheckin = null; simClear("grace");
+      if (socket?.connected) await api("/api/checkin/respond", { checkinId });
+      else { simLog("RESPONDED", "✅ Safe"); handleServerEvent("checkin_ok", {}); simSchedule(); }
+    }
+
+    async function respondIVR() {
+      closeIVRModal(); state.currentCheckin = null; simClear(`ivr${ivrCallNum}`);
+      if (socket?.connected) await api("/api/ivr/respond", { callNumber: ivrCallNum });
+      else { handleServerEvent("ivr_answered", {}); simSchedule(); }
+    }
+
+    async function resolveIncident() {
+      closeOverlay("rescue-overlay"); simClear();
+      if (socket?.connected) await api("/api/incident/resolve");
+      else { handleServerEvent("incident_resolved", {}); simSchedule(); }
+    }
+
+    /* ── UI Helpers ───────────────────────────────────────────────────────────── */
+    function showOverlay(id) { $(id).classList.add("show"); }
+    function closeOverlay(id) { $(id).classList.remove("show"); }
+
+    function openCheckinModal(secs) {
+      showOverlay("notif-overlay");
+      let rem = secs; $("cd-sec").textContent = rem;
+      clearInterval(cdTimer);
+      cdTimer = setInterval(() => {
+        rem--; $("cd-sec").textContent = rem;
+        if (rem <= 0) closeCheckinModal();
+      }, 1000);
+    }
+
+    function closeCheckinModal() { closeOverlay("notif-overlay"); clearInterval(cdTimer); }
+
+    function openIVRModal(n, phone) {
+      closeGapModal(); $("ivr-call-num").textContent = `#${n}`;
+      $("ivr-phone-display").textContent = phone || USER.phone;
+      updateDots(); showOverlay("ivr-overlay");
+      let s = 15; $("ivr-ring-sec").textContent = s;
+      clearInterval(ivrRingTimer);
+      ivrRingTimer = setInterval(() => { s--; $("ivr-ring-sec").textContent = Math.max(0, s); }, 1000);
+    }
+
+    function closeIVRModal() { closeOverlay("ivr-overlay"); clearInterval(ivrRingTimer); }
+
+    function openGapModal(next, s) {
+      closeIVRModal(); $("gap-next-call").textContent = next;
+      $("gap-sec").textContent = s; showOverlay("gap-overlay");
+      clearInterval(gapTimer);
+      gapTimer = setInterval(() => { s--; $("gap-sec").textContent = Math.max(0, s); }, 1000);
+    }
+
+    function closeGapModal() { closeOverlay("gap-overlay"); clearInterval(gapTimer); }
+
+    function updateDots() {
+      [1, 2, 3].forEach(i => {
+        const el = $(`dot-${i}`); el.className = "ivr-dot ";
+        const v = state.dots[i - 1];
+        if (v === 1) el.className += "ringing"; else if (v === 2) el.className += "missed"; else if (v === 3) el.className += "answered";
+      });
+    }
+
+    function updateBadge() {
+      const b = $("sys-badge");
+      b.textContent = state.enabled ? "● ACTIVE" : "○ OFFLINE";
+      b.className = "badge " + (state.enabled ? "on" : "off");
+    }
+
+    function updateFlowState(f) { if (state.tab === "monitor") renderTab(); }
+
+    /* ── Map helpers ──────────────────────────────────────────────────────────── */
+    function toggleTracking() {
+      state.tracking = !state.tracking;
+      if (state.tracking) {
+        toast("🟢 Live tracking enabled", "success");
+        updateLocationNow();
+      } else {
+        toast("⏹ Tracking paused", "info");
+      }
+      renderTab();
+    }
+
+    function updateLocationNow() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          USER.location.lat = pos.coords.latitude;
+          USER.location.lng = pos.coords.longitude;
+          if (socket?.connected) {
+            api("/api/location/update", {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              address: USER.location.address,
+            }).catch(() => { });
+          }
+          toast("📍 Location updated", "success");
+          renderTab();
+        }, () => {
+          toast("⚠️ Location access denied", "warn");
+        });
+      } else {
+        toast("⚠️ Geolocation not available", "warn");
+      }
+    }
+
+    function shareLocation() {
+      const url = `https://maps.google.com/?q=${USER.location.lat},${USER.location.lng}`;
+      if (navigator.share) {
+        navigator.share({ title: "My Location — SafeZone", text: `📍 ${USER.location.address}`, url });
+      } else {
+        navigator.clipboard.writeText(url).then(() => toast("📋 Location link copied!", "success"));
+      }
+    }
+
+    function switchTab(t) {
+      state.tab = t;
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === t));
+      renderTab();
+    }
+
+    function renderTab() {
+      const m = $("main-content"); m.innerHTML = "";
+      if (state.tab === "monitor") {
+        m.innerHTML = `
+      <div class="card">
+        <h3>Safety Monitor</h3>
+        <p style="color:var(--muted); font-size:13px;">${state.enabled ? 'Active and protecting you.' : 'Monitor is currently off.'}</p>
+      </div>
+      <div class="card">
+        <div class="range-wrap">
+          <div class="range-top">
+            <span class="range-lbl">Check-in Interval</span>
+            <span><span class="range-val" id="iv-val">${state.intervalMin}</span><span class="range-unit">min</span></span>
+          </div>
+          <input type="range" min="1" max="60" value="${state.intervalMin}"
+            style="--pct:${((state.intervalMin - 1) / 59 * 100).toFixed(0)}%"
+            oninput="state.intervalMin=+this.value; document.getElementById('iv-val').textContent=this.value; this.style.setProperty('--pct',((this.value-1)/59*100)+'%')"
+            ${state.enabled ? 'disabled' : ''}>
+          <div class="ticks"><span>1</span><span>15</span><span>30</span><span>45</span><span>60</span></div>
+        </div>
+        <div style="margin-bottom:6px;">
+          <span class="range-lbl">Grace Period</span>
+        </div>
+        <div class="grace-grid">
+          ${[30, 60, 90, 120].map(g => `
+            <button class="grace-opt ${state.graceSec === g ? 'active' : ''}"
+              onclick="state.graceSec=${g}; renderTab();"
+              ${state.enabled ? 'disabled' : ''}>${g}s</button>
+          `).join('')}
+        </div>
+      </div>
+      <button class="btn ${state.enabled ? 'btn-stop' : 'btn-rose'}" onclick="toggleMonitor()">
+          ${state.enabled ? '⏹ Stop Monitor' : '🛡 Start Monitor'}
+      </button>
+      <div style="height:10px"></div>
+      <button class="btn btn-demo" onclick="runDemo()">⚡ Quick Demo (5s Check-in)</button>
+    `;
+      } else if (state.tab === "log") {
+        m.innerHTML = `<h3>Activity Log</h3><div id="log-list"></div>`;
+        renderLog();
+      } else if (state.tab === "map") {
+        m.innerHTML = `
+        <div class="section-lbl">📍 YOUR LOCATION</div>
+        <div class="map-box">
+          <div class="map-visual">
+            <div class="map-grid"></div>
+            <div class="map-road h" style="top:35%"></div>
+            <div class="map-road h" style="top:65%"></div>
+            <div class="map-road v" style="left:30%"></div>
+            <div class="map-road v" style="left:60%"></div>
+            <div class="map-place" style="top:20%;left:18%">🏫</div>
+            <div class="map-place" style="top:70%;left:75%">🏥</div>
+            <div class="map-place" style="top:25%;left:80%">🏪</div>
+            <div class="map-place" style="top:75%;left:25%">⛪</div>
+            <div class="map-you">
+              <div class="you-dot"></div>
+              <div class="you-ring"></div>
+            </div>
+            <div class="map-overlay">
+              <div>
+                <div class="map-addr">${USER.location.address}</div>
+                <div class="map-coords">${USER.location.lat.toFixed(4)}, ${USER.location.lng.toFixed(4)}</div>
+              </div>
+            </div>
+          </div>
+          <div class="map-actions">
+            <button class="map-act ${state.tracking ? 'active' : ''}" onclick="toggleTracking()">
+              ${state.tracking ? '🟢 Live' : '📍 Track'}
+            </button>
+            <button class="map-act" onclick="updateLocationNow()">🔄 Refresh</button>
+            <button class="map-act" onclick="shareLocation()">📤 Share</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">Live Tracking</div>
+              <div style="font-size:11px;color:var(--muted);">Share location with rescue team</div>
+            </div>
+            <button class="pill ${state.tracking ? 'on' : 'off'}" onclick="toggleTracking()">
+              <div class="pill-knob"></div>
+            </button>
+          </div>
+        </div>
+        `;
+      } else if (state.tab === "contacts") {
+        const badgeMap = { Family: 'cb-fam', Friend: 'cb-fri', Emergency: 'cb-em', Helpline: 'cb-em' };
+        m.innerHTML = `
+        <div class="section-lbl">🆘 EMERGENCY CONTACTS</div>
+        ${USER.emergencyContacts.map(c => `
+          <div class="contact-item">
+            <div class="c-avatar">${c.emoji}</div>
+            <div>
+              <div class="c-name">${c.name}</div>
+              <div class="c-phone">${c.phone}</div>
+            </div>
+            <span class="c-badge ${badgeMap[c.relation] || 'cb-em'}">${c.relation}</span>
+          </div>
+        `).join('')}
+        <div class="card" style="margin-top:14px;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px;">☎️ Quick Emergency Call</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button class="btn btn-rose" style="font-size:13px;padding:12px;" onclick="window.location.href='tel:112'">📞 Emergency 112</button>
+            <button class="btn" style="font-size:13px;padding:12px;background:var(--s3);color:var(--text);" onclick="window.location.href='tel:1091'">🛡 Women Helpline</button>
+          </div>
+        </div>
+        `;
+      } else {
+        m.innerHTML = `<div style="padding:40px; text-align:center; color:var(--muted);">Tab ${state.tab} coming soon.</div>`;
+      }
+    }
+
+    function renderLog() {
+      const l = $("log-list"); if (!l) return;
+      l.innerHTML = state.log.map(e => `
+        <div style="font-size:12px; border-bottom:1px solid #eee; padding:8px 0;">
+            <strong>[${e.type}]</strong> ${e.message} <span style="float:right; color:#999;">${fmt(e.ts)}</span>
+        </div>
+    `).join("") || "No logs yet.";
+    }
+
+    /* ── Boot ─────────────────────────────────────────────────────────────────── */
+    $("btn-safe").onclick = respondSafe;
+    $("btn-answer").onclick = respondIVR;
+    $("btn-resolve").onclick = resolveIncident;
+
+    connectSocket();
+    renderTab();
+    updateBadge();
+  </script>
+</body>
+
+</html>
