@@ -183,7 +183,8 @@ xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug
 
 ---
 
-### For Hardware Projects:
+
+- "Create a REST API endp### For Hardware Projects:
 
 #### Bill of Materials (BOM)
 
@@ -329,12 +330,8 @@ python script.py -v --format json data.json
 ## Project Demo
 
 ### Video
-[Add your demo video link here - YouTube, Google Drive, etc.]
 
-*Explain what the video demonstrates - key features, user flow, technical highlights*
-
-### Additional Demos
-[Add any extra demo materials/links - Live site, APK download, online demo, etc.]
+https://drive.google.com/file/d/1jE5utbvW6zl8KFb6EQgza6WdsfqqwH4u/view?usp=sharing
 
 ---
 
@@ -349,8 +346,7 @@ If you used AI tools during development, document them here for transparency:
 - Example: "Debugging assistance for async functions"
 - Example: "Code review and optimization suggestions"
 
-**Key Prompts Used:**
-- "Create a REST API endpoint for user authentication"
+**Key Prompts Used:**oint for user authentication"
 - "Debug this async function that's causing race conditions"
 - "Optimize this database query for better performance"
 
@@ -368,9 +364,8 @@ If you used AI tools during development, document them here for transparency:
 
 ## Team Contributions
 
-- [Name 1]: [Specific contributions - e.g., Frontend development, API integration, etc.]
-- [Name 2]: [Specific contributions - e.g., Backend development, Database design, etc.]
-- [Name 3]: [Specific contributions - e.g., UI/UX design, Testing, Documentation, etc.]
+- Anjana V Nair: ideation , frontend , backend
+- Fehda Faizy: debugging ,testing
 
 ---
 
