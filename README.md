@@ -2,27 +2,34 @@
   <img src="./img.png" alt="Project Banner" width="100%">
 </p>
 
-# [Project Name] 🎯
+# SAFETY CHECK 🎯
 
 ## Basic Details
 
-### Team Name: [Name]
+### Team Name:Axion
 
 ### Team Members
-- Member 1: [Name] - [College]
-- Member 2: [Name] - [College]
+- Member 1: Anjana V Nair - CEAL
+- Member 2: Fehdafaizy- CEAL
 
 ### Hosted Project Link
 [mention your project hosted link here]
 
 ### Project Description
-[2-3 lines about what your project does]
+a safety software that works in travel or in distress
+the main features of the software are
+call
+nortification (alert)
+location tracking
+rescue team alert
 
 ### The Problem statement
-[What problem are you solving?]
+a safety inititative for men and women especially at night
 
 ### The Solution
-[How are you solving it?]
+we introduce a software that acts as a safety protocol for travellers especially women
+in which the software provides an alert nortifical of checking time interval when it is enabled. 
+if the nortification is not marked an IVR call will approach with location tracking after 2 calls the rescue team is alerted.
 
 ---
 
@@ -31,25 +38,20 @@
 ### Technologies/Components Used
 
 **For Software:**
-- Languages used: [e.g., JavaScript, Python, Java]
-- Frameworks used: [e.g., React, Django, Spring Boot]
-- Libraries used: [e.g., axios, pandas, JUnit]
-- Tools used: [e.g., VS Code, Git, Docker]
+- Languages used: JavaScript, HTML ,CSS
+- Frameworks used: node
+- Libraries used: none
+- Tools used:VS Code, Git,Antigravity
 
-**For Hardware:**
-- Main components: [List main components]
-- Specifications: [Technical specifications]
-- Tools required: [List tools needed]
 
----
 
 ## Features
 
 List the key features of your project:
-- Feature 1: [Description]
-- Feature 2: [Description]
-- Feature 3: [Description]
-- Feature 4: [Description]
+- Feature 1: call access
+- Feature 2: notification with customised interval
+- Feature 3: location tracking
+- Feature 4: rescue team alert
 
 ---
 
@@ -59,7 +61,7 @@ List the key features of your project:
 
 #### Installation
 ```bash
-[Installation commands - e.g., npm install, pip install -r requirements.txt]
+ npm install
 ```
 
 #### Run
@@ -67,37 +69,27 @@ List the key features of your project:
 [Run commands - e.g., npm start, python app.py]
 ```
 
-### For Hardware:
-
-#### Components Required
-[List all components needed with specifications]
-
-#### Circuit Setup
-[Explain how to set up the circuit]
-
----
-
 ## Project Documentation
 
 ### For Software:
 
 #### Screenshots (Add at least 3)
 
-![Screenshot1](Add screenshot 1 here with proper name)
-*Add caption explaining what this shows*
+Screenshot1<img width="459" height="603" alt="Screenshot 2026-02-21 095457" src="https://github.com/user-attachments/assets/29315b88-9742-444f-9e84-da76925c226d" />
+*homescreen
 
-![Screenshot2](Add screenshot 2 here with proper name)
-*Add caption explaining what this shows*
-
-![Screenshot3](Add screenshot 3 here with proper name)
-*Add caption explaining what this shows*
+Screenshot2
+<img width="467" height="604" alt="Screenshot 2026-02-21 095618" src="https://github.com/user-attachments/assets/ab314305-9893-4ef8-885a-2a8014e1735a" />
+alert notifing screen
+Screenshot3
+<img width="453" height="576" alt="Screenshot 2026-02-21 095655" src="https://github.com/user-attachments/assets/682bb72f-3c0e-44a5-9fb5-0c4aa6acb62e" />
+*incoming call, if alert not satisfied
 
 #### Diagrams
 
-**System Architecture:**
+**System Architecture
+<img src="![structure](https://github.com/user-attachments/assets/ab82d652-0416-420f-b432-1e9ac98f6050)">
 
-![Architecture Diagram](docs/architecture.png)
-*Explain your system architecture - components, data flow, tech stack interaction*
 
 **Application Workflow:**
 
@@ -106,30 +98,7 @@ List the key features of your project:
 
 ---
 
-### For Hardware:
 
-#### Schematic & Circuit
-
-![Circuit](Add your circuit diagram here)
-*Add caption explaining connections*
-
-![Schematic](Add your schematic diagram here)
-*Add caption explaining the schematic*
-
-#### Build Photos
-
-![Team](Add photo of your team here)
-
-![Components](Add photo of your components here)
-*List out all components shown*
-
-![Build](Add photos of build process here)
-*Explain the build steps*
-
-![Final](Add photo of final product here)
-*Explain the final build*
-
----
 
 ## Additional Documentation
 
