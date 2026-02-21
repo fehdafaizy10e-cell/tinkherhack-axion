@@ -92,7 +92,7 @@ Screenshot3
 
 
 **Application Workflow:**
-<img src="structure.jpeg /"
+<img src="structure.jpeg /">
 *Add caption explaining your workflow*
 
 ---
