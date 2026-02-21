@@ -13,7 +13,7 @@
 - Member 2: Fehdafaizy- CEAL
 
 ### Hosted Project Link
-[mention your project hosted link here]
+https://fehdafaizy10e-cell.github.io/tinkherhack-axion/
 
 ### Project Description
 a safety software that works in travel or in distress
@@ -75,14 +75,14 @@ List the key features of your project:
 
 #### Screenshots (Add at least 3)
 
-Screenshot1<img width="459" height="603" alt="Screenshot 2026-02-21 095457" src="https://github.com/user-attachments/assets/29315b88-9742-444f-9e84-da76925c226d" />
+Screenshot1 <img width="459" height="603" alt="Screenshot 2026-02-21 095457" src="img1" />
 *homescreen
 
 Screenshot2
-<img width="467" height="604" alt="Screenshot 2026-02-21 095618" src="https://github.com/user-attachments/assets/ab314305-9893-4ef8-885a-2a8014e1735a" />
+<img width="459" height="603" alt="Screenshot 2026-02-21 095457" src="img2" />
 alert notifing screen
 Screenshot3
-<img width="453" height="576" alt="Screenshot 2026-02-21 095655" src="https://github.com/user-attachments/assets/682bb72f-3c0e-44a5-9fb5-0c4aa6acb62e" />
+<img width="459" height="603" alt="Screenshot 2026-02-21 095457" src="img3" />
 *incoming call, if alert not satisfied
 
 #### Diagrams
