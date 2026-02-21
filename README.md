@@ -92,8 +92,7 @@ Screenshot3
 
 
 **Application Workflow:**
-
-![Workflow](docs/workflow.png)
+<img src="structure.jpeg /"
 *Add caption explaining your workflow*
 
 ---
