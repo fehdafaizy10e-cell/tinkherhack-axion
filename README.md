@@ -75,14 +75,14 @@ List the key features of your project:
 
 #### Screenshots (Add at least 3)
 
-Screenshot1 <img width="459" height="603" src="img1" />
+Screenshot1 <img width="459" height="603" src="img1.png" />
 *homescreen
 
 Screenshot2
-<img width="459" height="603" src="img2" />
+<img width="459" height="603" src="img2.png" />
 alert notifing screen
 Screenshot3
-<img width="459" height="603" src="img3" />
+<img width="459" height="603" src="img3.png" />
 *incoming call, if alert not satisfied
 
 #### Diagrams
